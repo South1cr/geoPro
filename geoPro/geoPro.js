@@ -184,15 +184,15 @@ geoPro =  { //geoPro constructor
 		}
 	},
 	
-	_segment_featureIntersection: function(segment,feature){ // find where line features, either line segments or polygon borders, intersect
-		var featureGeom = feature.getGeometry();
-		var coordsArr;
+	_segment_featureIntersection: function(segment,coordsArr){ // find where line features, either line segments or polygon borders, intersect
+	//	var featureGeom = feature.getGeometry();
+		//var coordsArr;
 		var intersectionPoints = [];
-		coordsArr = featureGeom.getCoordinates()[0];
+		//coordsArr = featureGeom.getCoordinates()[0];
 		
-		if(!(geoPro._isClockwise(coordsArr))){
-			coordsArr = coordsArr.reverse();
-		}
+		//if(!(geoPro._isClockwise(coordsArr))){
+		//	coordsArr = coordsArr.reverse();
+		//}
 
 		var x1 = segment[0][0];
 		var y1 = segment[0][1];
@@ -227,19 +227,23 @@ geoPro =  { //geoPro constructor
 		
 		if(intersectionPoints.length >1){ // order intersection points from x1,y1 to x2,y2
 			var distanceTable = {};
-			sortingArray = [];
-			sortedIntPoints = [];
+			var sortingArray = [];
+			var sortedIntPoints = [];
 			for(var i=0;i<intersectionPoints.length;i++){
 				var distance = Math.sqrt(Math.pow(intersectionPoints[i][0][0]-x1, 2) + Math.pow(intersectionPoints[i][0][1]-y1, 2));
 				distanceTable[distance] = intersectionPoints[i];
 				sortingArray.push(distance);
 			}
-			sortingArray.sort();
+			sortingArray.sort(function(a, b){return a-b});
+			console.log('sorting array');
 			console.log(sortingArray);
 			sortingArray.forEach(function(key) {
 				sortedIntPoints.push(distanceTable[key]);
 			})
-			
+			console.log('dudu');
+			console.log(distanceTable);
+			console.log(sortingArray);
+			console.log(sortedIntPoints);
 			return sortedIntPoints;
 		} else {
 			return intersectionPoints;
@@ -295,7 +299,7 @@ geoPro =  { //geoPro constructor
 	},
 	
 	
-	clip: function(feature1,feature2){ // feature to be clipped, clipping feature
+	erase: function(feature1,feature2){ // feature to be clipped, clipping feature
 		
 		if(feature1.getGeometry().getType() != "Polygon" || feature2.getGeometry().getType() != "Polygon"){ // check for polygon geometry
 			return false; // exit if either feature is not a polygon
@@ -308,12 +312,12 @@ geoPro =  { //geoPro constructor
 		var feat1Coords = feat1Geom.getCoordinates()[0];
 		var feat2Coords = feat2Geom.getCoordinates()[0];
 		
-		if(!(geoPro._isClockwise(feat1Coords))){
+		/*if(!(geoPro._isClockwise(feat1Coords))){
 			feat1Coords = feat1Coords.reverse();
 		}
 		if(!(geoPro._isClockwise(feat2Coords))){
 			feat2Coords = feat2Coords.reverse();
-		}
+		}*/
 		
 		// get appending rings
 		for(var i=0;i<feat1Coords.length-1;i++){
@@ -323,25 +327,30 @@ geoPro =  { //geoPro constructor
 			var x2 = feat1Coords[i+1][0];
 			var y2 = feat1Coords[i+1][1];
 			
-			var inOut1 = geoPro.pointInPolygon([x1,y1],feature2);
+			
 			var inOut2 = geoPro.pointInPolygon([x2,y2],feature2);
-			var intPoint = geoPro._segment_featureIntersection([[x1,y1],[x2,y2]],feature2);
+			var intPoint = geoPro._segment_featureIntersection([[x1,y1],[x2,y2]],feat2Coords);
 			if(intPoint.length==0 && !(inOut2)){ // no intersection and second point is outside
 				newFeatRings.push([x2,y2]);
 				//console.log('no intersection and second point is outside');
 			}
-			if(intPoint.length == 1 && !(inOut2)){ // one intersection and second point is outside
+			else if(intPoint.length == 1 && !(inOut2)){ // one intersection and second point is outside
 				newFeatRings.push(intPoint[0][0],[x2,y2]);
 				//console.log('intersection and second point is outside');
 			}
-			if(intPoint.length > 1 || intPoint.length == 1 && inOut2){
+			else if(intPoint.length > 1 || intPoint.length == 1 && inOut2){
+				var inOut1 = geoPro.pointInPolygon([x1,y1],feature2);
 				for(var j=0;j<intPoint.length;j++){
 					console.log(j);
 					newFeatRings.push(intPoint[j][0]);
-				//	if(!(i == 0 && j == 0)){ // do not start new feature coordinates on interior points as the polygon will not be drawn correctly 
+					console.log(inOut1);
+					if(i == 0 && j == 0 && inOut1){ // do not start new feature coordinates on interior points as the polygon will not be drawn correctly 
+						console.log('first node,first int, inside point');
+						
+					} else {
 						var index, iterator, intersectionNotFound = true;
 						if(!(newFeatRings.indexOf(feat2Coords[intPoint[j][1]]) > -1 || newFeatRings.indexOf(feat2Coords[intPoint[j][2]]) > -1)){
-							console.log(intPoint[j][1]);
+							
 							console.log('gonna check em');
 							if(geoPro.pointInPolygon(feat2Coords[intPoint[j][1]],feature1)){ // negative loop
 								newFeatRings.push(feat2Coords[intPoint[j][1]]);
@@ -372,7 +381,7 @@ geoPro =  { //geoPro constructor
 								index+= iterator;
 							} while(intersectionNotFound);
 						}
-					//}
+					}
 				}
 				if(!(inOut2)){
 					newFeatRings.push([x2,y2]);
