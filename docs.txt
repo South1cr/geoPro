@@ -1,0 +1,54 @@
+GeoPro Docs
+
+Author: Connor Southwell South1cr@cmich.edu
+
+
+Planar Buffer
+
+Simple geometric buffer (non-geodesic). Utilizes the units of the geometry of the input feature.
+To perform a geodesic buffer use a projection such as stateplane that is equidistant.
+Output Type: OpenLayers Polygon feature.
+Accepted geometry types: Point, Linstring, Polygon.
+
+example script:
+
+	calls a buffer on feature at a distance of 100*feature geomtry units
+
+		BufferFeature = geoPro.buffer(feature, 100);
+
+
+Erase
+
+Takes two input polygons. The output feature is a polygon representing areas in the first input feature that are not shared with the second input feature.
+Output Type: OpenLayers Polygon feature.
+Accepted geometry types: Polygon
+
+example script:
+
+	featureOne is the feature to be erased, featureTwo is the erasing feature.
+	
+		erasedFeature = geoPro.erase(featureOne,featureTwo);
+
+Centroid
+
+Utilizes a center of mass algorithm to produce the center of an input polygon weighted by the polygon's area.
+Output Type: OpenLayers Point feature
+Accepted Geomtry Types: Polygon.
+
+example script:
+
+	feature is an input polygon.
+
+		centroid = geoPro.getCentroid(feature);
+
+Point in Polygon
+
+Utilizes a ray-casting algorithm to determine if an input point feature is within an input polygon feature
+Output Type: boolean.
+accepted Geometry Types: Point, Polygon.
+
+example script:
+
+	pointFeature is the input point, polygonFeature is the input polygon. The result is a boolean value indicating whether or not the point feature is within the polygon feature.
+
+		inPolygon = geoPro.pointInPolygon(pointFeature,polygonFeature);
